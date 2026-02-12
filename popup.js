@@ -1,4 +1,4 @@
-const toggle = document.getElementById("fishToggle");
+const toggle = document.getElementById("FiSHToggle");
 
 chrome.storage.sync.get(["FiSHMode"], (res) => {
     toggle.checked = !!res.FiSHMode;
