@@ -2,14 +2,18 @@ const FiSHWord = "fish";
 const FiSHEmoji = "🐟";
 
 function FiSHifyText(node) {
+  if (node.nodeType !== Node.TEXT_NODE) return;
+  if (!node.textContent.trim()) return;
 
-    if (node.nodeType !== Node.TEXT_NODE) return;
+  const parent = node.parentElement;
+  if (!parent) return;
 
-    if (!node.textContent.trim()) return;
+  const forbidden = ["SCRIPT", "STYLE", "NOSCRIPT", "IFRAME", "TEMPLATE"];
+  if (forbidden.includes(parent.tagName)) return;
 
-    node.textContent = node.textContent
-        .replace(/\p{Extended_Pictographic}/gu, FiSHEmoji)
-        .replace(/\b\w+\b/g, FiSHWord);
+  node.textContent = node.textContent
+    .replace(/\p{Extended_Pictographic}/gu, FiSHEmoji)
+    .replace(/\b\w+\b/g, FiSHWord);
 }
 
 function walk(node) {
@@ -18,13 +22,28 @@ function walk(node) {
 }
 
 function FiSHifyImages() {
-    document.querySelectorAll("img").forEach(img => {
-        if (!img.dataset.originalSrc) {
-            img.dataset.originalSrc = img.src;
+  document.querySelectorAll("img").forEach(img => {
+    if (img.dataset.FiSHified) return;
+    img.dataset.FiSHified = "true";
+    img.dataset.originalSrc = img.currentSrc || img.src;
+    const FiSHUrl = chrome.runtime.getURL("fish.gif");
+    img.loading = "eager";
+    img.decoding = "sync";
+    img.src = FiSHUrl;
+    img.srcset = FiSHUrl;
+    img.addEventListener(
+      "load",
+      () => {
+        if (img.src !== FiSHUrl) {
+          img.src = FiSHUrl;
+          img.srcset = FiSHUrl;
         }
-        img.src = chrome.runtime.getURL("fish.gif");
-    });
+      },
+      { once: true }
+    );
+  });
 }
+
 
 function applyFiSHMode() {
     walk(document.body);
